@@ -10,20 +10,22 @@ if ping -q -c 1 -W 1 $gw >/dev/null; then
         devices[1]=u
 fi
 
+# Map sdX to hardware device
+declare -A hwmap
+while read line
+do
+        MAP=($line)
+        #echo "${MAP[0]} ${MAP[1]}"
+        hwmap[${MAP[0]}2]=${MAP[1]:0:1}
+done <<< "$(lsblk -S -o NAME,HCTL | tail -n +2)"
+
+# check status of zpool disks
 while read line
 do
         DEV=($line)
         #echo "${DEV[0]} ${DEV[1]}"
-        case "${DEV[0]}" in
-                sda*) index=2;;
-                sdb*) index=3;;
-                sdc*) index=4;;
-                sdd*) index=5;;
-                sde*) index=6;;
-                sdf*) index=7;;
-                sdg*) index=8;;
-                sdh*) index=9;;
-        esac
+
+        index=$((${hwmap[${DEV[0]}]} + 2))
 
         if [ ${DEV[1]} = "ONLINE" ]; then
                 #echo "$index on"
